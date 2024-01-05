@@ -1,5 +1,8 @@
-from flask import Flask, render_template, request, redirect, url_for, send_file
+from flask import Flask, Blueprint, flash, render_template, request, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import UserMixin, login_user, login_required, logout_user, curent_user, LoginManager
+from os import path
+from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
 
@@ -7,18 +10,127 @@ import os
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'pythoneers'
 
-# initiating database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///db.sqlite3'
+# initiating machine database
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+# user database
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(50), unique=True)
+    password = db.Column(db.String(50), nullable=False)
+    username = db.Column(db.String(50), nullable=False)
+    machines = db.relationship('Machine')
+
+# machine database
+class Machine(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    filename = db.Column(db.String(50), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+
+def create_database():
+    if not path.exists("database.db"):
+        db.create_all()
+        print('Database created!')
+
+# login manager
+login_manager = LoginManager()
+login_manager.login_view = 'auth.login'
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(id):
+    return User.query.get(int(id))
 
 # upload folder for database
 app.config['UPLOAD_FOLDER1'] = "machines"
 
-# home page
+# authentification
+auth = Blueprint('auth', __name__)
+
+# log in
+@auth.route("/login", methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            if check_password_hash(user.password, password):
+                flash("Logged in successfully", category='success')
+                login_user(user, remember=True)
+                return redirect(url_for('upload'))
+            else:
+                flash('Incorrect password', category='error')
+        else:
+            flash('Incorrect password', category='error')
+
+    return render_template("login.html")
+
+# log out
+@auth.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('auth.login'))
+
+# sign up
+@auth.route("/signup", methods=['GET', 'POST'])
+def signup():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        username = request.form.get('username')
+        password = request.form.get('password')
+        confirm = request.form.get('confirm_password')
+
+        user = User.query.filter_by(email=email).first()
+
+        if user:
+            flash('Email already exists', category='error')
+        elif len(email) < 6:
+            flash("Email too short", category='error')
+        elif len(username) < 3:
+            flash("Username too short", category='error')
+        elif password != confirm:
+            flash("Passwords don\'t match", category='error')
+        elif len(password) < 7:
+            flash("Passwords too short", category='error')
+        else:
+            new_user = User(email=email, username=username,
+                            password=generate_password_hash(password, method='pbkdf2:sha256'))
+            db.session.add(new_user)
+            db.session.commit()
+            flash("Account created!", category='success')
+
+            login_user(user, remember=True)
+            return redirect(url_for('upload'))
+        
+    return render_template("signup.html")
+
+app.register_blueprint(auth, url_prefix='/auth')
+
 @app.route("/")
 def home():
-    return render_template('home.html')
+    return redirect(url_for("auth.login"))
+
+# upload page
+@app.route("/home", methods=['GET', 'POST'])
+def upload():
+    if request.method == 'POST':
+        # process the uploaded data as needed
+        text_input = request.form['text_input']
+        uploaded_photos = request.files.getlist('photo_upload[]')
+
+        # placeholder response
+        result = f"Text: {text_input}, Number of Photos: {len(uploaded_photos)}"
+    else:
+        result = None
+
+    return render_template('home.html', result=result)
 
 # generate a unique filename
 def generate_unique_filename():
@@ -54,7 +166,7 @@ def add_file():
             uploaded_file.save(file_path)
 
             # save to database
-            new_model = Machine(name=machine_name, filename=unique_filename)
+            new_model = Machine(name=machine_name, filename=unique_filename, user_id=curent_user.id)
             db.session.add(new_model)
             db.session.commit()
 
@@ -98,11 +210,9 @@ def try_machine(filename):
 
     return render_template('try_machine.html', filename=filename, result=None)
 
-# model for the database
-class Machine(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    filename = db.Column(db.String(50), nullable=False)
+with app.app_context():
+    create_database()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
