@@ -1,6 +1,6 @@
 from flask import Flask, Blueprint, flash, render_template, request, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
-from flask_login import UserMixin, login_user, login_required, logout_user, curent_user, LoginManager
+from flask_login import UserMixin, login_user, login_required, logout_user, current_user, LoginManager
 from os import path
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
@@ -14,6 +14,11 @@ app.config['SECRET_KEY'] = 'pythoneers'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+
+PHOTO_UPLOAD_FOLDER = 'photo_uploads'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+app.config['UPLOAD_FOLDER'] = PHOTO_UPLOAD_FOLDER
 
 # user database
 class User(db.Model, UserMixin):
@@ -117,16 +122,40 @@ app.register_blueprint(auth, url_prefix='/auth')
 def home():
     return redirect(url_for("auth.login"))
 
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # upload page
 @app.route("/home", methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         # process the uploaded data as needed
         text_input = request.form['text_input']
-        uploaded_photos = request.files.getlist('photo_upload[]')
+        uploaded_files = request.files.getlist('photo_upload[]')
+        uploaded_photos = []
+        photonames = []
+        result = None
+
+        if not text_input:
+            return render_template('home.html', error=f"Please enter what to detect")
+
+        for file in uploaded_files:
+            if file.filename == '':
+                return render_template('home.html', error=f"No file selected")
+
+            if file and allowed_file(file.filename):
+                uploaded_photos.append(file)
+
+        if not uploaded_photos:
+            return render_template('home.html', error=f"No valid photo selected")
+
+        for photo in uploaded_photos:
+            filename = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
+            photo.save(filename)
+            photonames.append(photo.filename)
 
         # placeholder response
-        result = f"Text: {text_input}, Number of Photos: {len(uploaded_photos)}"
+        result = f"Text input : {text_input}, Number of Photos: {len(uploaded_photos)}, Photos: {photonames}"
     else:
         result = None
 
@@ -166,7 +195,7 @@ def add_file():
             uploaded_file.save(file_path)
 
             # save to database
-            new_model = Machine(name=machine_name, filename=unique_filename, user_id=curent_user.id)
+            new_model = Machine(name=machine_name, filename=unique_filename, user_id=current_user.id)
             db.session.add(new_model)
             db.session.commit()
 

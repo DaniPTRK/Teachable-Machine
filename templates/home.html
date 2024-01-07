@@ -1,1 +1,33 @@
-<h1>Home</h1>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+
+    <h1>Image upload</h1>
+
+    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+        <label for="myTextBox">What to detect:</label>
+        <input type="text" id="text_input" name="text_input">
+        <br>
+        <label for="file">Select images:</label>
+        <input type="file" id="file" name="photo_upload[]" accept="image/*" multiple>
+        <br>
+        <input type="submit" value="Upload images">
+
+        {% if error %}
+        <p>{{ error }}</p>
+        {% endif %}
+
+    </form>
+
+    {% if result %}
+    <h2>Result</h2>
+    <p>{{ result }}</p>
+    {% endif %}
+
+</body>
+</html>
