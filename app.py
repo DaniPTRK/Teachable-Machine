@@ -237,7 +237,7 @@ def download_file():
     machine = Machine.query.filter_by(filename=filename).first()
 
     if machine:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER1'], machine.name + '.h5')
+        file_path = os.path.join(app.config['UPLOAD_FOLDER1'], machine.filename + '.h5')
         return send_file(file_path, as_attachment=True)
     else:
         return "File not found", 404
