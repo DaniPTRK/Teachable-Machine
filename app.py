@@ -68,7 +68,7 @@ def login():
             if check_password_hash(user.password, password):
                 flash("Logged in successfully", category='success')
                 login_user(user, remember=True)
-                return redirect(url_for('upload'))
+                return redirect(url_for('main_page'))
             else:
                 flash('Incorrect password', category='error')
         else:
@@ -112,7 +112,7 @@ def signup():
             flash("Account created!", category='success')
 
             login_user(user, remember=True)
-            return redirect(url_for('upload'))
+            return redirect(url_for('main_page'))
         
     return render_template("signup.html")
 
@@ -122,44 +122,59 @@ app.register_blueprint(auth, url_prefix='/auth')
 def home():
     return redirect(url_for("auth.login"))
 
+@app.route("/main_page")
+def main_page():
+    return render_template("home.html")
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# upload page
-@app.route("/home", methods=['GET', 'POST'])
-def upload():
+# get target and photos from user
+@app.route("/upload_photos", methods=['GET', 'POST'])
+def upload_photos():
     if request.method == 'POST':
         # process the uploaded data as needed
-        text_input = request.form['text_input']
+        target = request.form['text_input']
         uploaded_files = request.files.getlist('photo_upload[]')
         uploaded_photos = []
         photonames = []
         result = None
 
-        if not text_input:
-            return render_template('home.html', error=f"Please enter what to detect")
+        if not target:
+            return render_template('upload_photos.html', error=f"Please enter what to detect")
 
         for file in uploaded_files:
             if file.filename == '':
-                return render_template('home.html', error=f"No file selected")
+                return render_template('upload_photos.html', error=f"No file selected")
 
             if file and allowed_file(file.filename):
                 uploaded_photos.append(file)
 
         if not uploaded_photos:
-            return render_template('home.html', error=f"No valid photo selected")
+            return render_template('upload_photos.html', error=f"No valid image selected")
 
         for photo in uploaded_photos:
             filename = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
             photo.save(filename)
             photonames.append(photo.filename)
 
-        # placeholder response
-        result = f"Text input : {text_input}, Number of Photos: {len(uploaded_photos)}, Photos: {photonames}"
+        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos))
+
     else:
         result = None
 
-    return render_template('home.html', result=result)
+    return render_template('upload_photos.html', result=result)
+
+# create machine
+@app.route("/create_machine")
+def create_machine():
+    target = request.args['target']
+    uploaded_photos = request.args['uploaded_photos']
+    machine_name = request.form['machine_name']
+
+    # here to create machine i think
+
+    return render_template("create_machine.html")
 
 # generate a unique filename
 def generate_unique_filename():
@@ -171,20 +186,24 @@ def upload_success():
     return render_template('upload_success.html')
 
 # submit machine
-@app.route("/add_file", methods=['POST', 'GET'])
-def add_file():
+@app.route("/upload_machine", methods=['POST', 'GET'])
+def upload_machine():
     if request.method == 'POST':
         # get the submitted file
-        uploaded_file = request.files['file']
+        uploaded_file = request.files['machine_file']
 
         # check if file is valid
         if uploaded_file and uploaded_file.filename.endswith('.h5'):
             # check if name is taken
-            machine_name = request.form['name']
+            machine_name = request.form['machine_name']
+
+            if not machine_name:
+                return render_template('upload_machine.html', error='Please enter a name for your machine.')
+
             existing_machine = Machine.query.filter_by(name=machine_name).first()
 
             if existing_machine:
-                return render_template('upload.html', error='Machine name already taken. Please choose a different name.')
+                return render_template('upload_machine.html', error='Machine name already taken. Please choose a different name.')
 
             # unique filename
             unique_filename = generate_unique_filename()
@@ -201,9 +220,9 @@ def add_file():
 
             return redirect(url_for('upload_success'))
         else:
-            return render_template('upload.html', error='Invalid file format. Please upload a .h5 file.')
+            return render_template('upload_machine.html', error='Invalid file format. Please upload a .h5 file.')
 
-    return render_template('upload.html')
+    return render_template('upload_machine.html')
 
 # download machines page
 @app.route("/machines")
@@ -212,12 +231,13 @@ def machines():
     return render_template('machines.html', models=models)
 
 # download machine file
-@app.route("/download/<filename>")
-def download_file(filename):
+@app.route("/download_file")
+def download_file():
+    filename = request.args['filename']
     machine = Machine.query.filter_by(filename=filename).first()
 
     if machine:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER1'], machine.filename + '.h5')
+        file_path = os.path.join(app.config['UPLOAD_FOLDER1'], machine.name + '.h5')
         return send_file(file_path, as_attachment=True)
     else:
         return "File not found", 404

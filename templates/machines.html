@@ -7,6 +7,9 @@
 </head>
 <body>
 
+    {% if error %}
+        <p>{{ error }}</p>
+    {% else %}
     <h1>Machines list</h1>
 
     <ul>
@@ -16,6 +19,7 @@
     </ul>
     
     <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+    {% endif %}
 
 </body>
 </html>
