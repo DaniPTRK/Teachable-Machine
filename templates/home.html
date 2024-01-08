@@ -6,28 +6,11 @@
     <title>Home</title>
 </head>
 <body>
+    <h1>Home menu</h1>
+    <p><a href="{{ url_for('upload_photos') }}">Create a machine</a></p>
+    <p><a href="{{ url_for('upload_machine') }}">Upload a machine</a></p>
+    <p><a href="{{ url_for('machines') }}">Download a machine</a></p>
 
-    <h1>Image upload</h1>
 
-    <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
-        <label for="myTextBox">What to detect:</label>
-        <input type="text" id="text_input" name="text_input">
-        <br>
-        <label for="file">Select images:</label>
-        <input type="file" id="file" name="photo_upload[]" accept="image/*" multiple>
-        <br>
-        <input type="submit" value="Upload images">
-
-        {% if error %}
-        <p>{{ error }}</p>
-        {% endif %}
-
-    </form>
-
-    {% if result %}
-    <h2>Result</h2>
-    <p>{{ result }}</p>
-    {% endif %}
-
+    <p><a href="{{ url_for('auth.logout') }}">Logout</a></p>
 </body>
-</html>

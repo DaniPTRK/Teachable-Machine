@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create machine</title>
+</head>
+<body>
+
+    <form action="{{ url_for('create_machine') }}" method="post" enctype="multipart/form-data">
+        <label for="machine_name">Machine name:</label>
+        <input type="text" id="machine_name" name="machine_name">
+        
+        {% if error %}
+        <p>{{ error }}</p>
+        {% endif %}
+
+    </form>
+
+    <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+
+</body>
+</html>
