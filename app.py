@@ -16,7 +16,7 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 PHOTO_UPLOAD_FOLDER = 'photo_uploads'
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'jfif'}
 
 app.config['UPLOAD_FOLDER'] = PHOTO_UPLOAD_FOLDER
 
@@ -294,18 +294,27 @@ def try_machine(filename):
 
         for file in uploaded_files:
             if file.filename == '':
-                return render_template('upload_photos.html', error=f"No file selected")
+                return render_template('try_machine.html', error=f"No file selected")
 
             if file and allowed_file(file.filename):
                 uploaded_photos.append(file)
 
         if not uploaded_photos:
-            return render_template('upload_photos.html', error=f"No valid image selected")
+            return render_template('try_machine.html', error=f"No valid image selected")
+        
+        if len(uploaded_photos) > 5:
+            return render_template('try_machine.html', error=f"Too many photos")
 
         # waiting for code for tryig machine
+        # labels, percentage = try_func()
 
         # placeholder result for demonstration
-        result = "Placeholder result for the uploaded photo."
+        label = ("pisica", "papagal", "papagal", "pisica")
+        result = ""
+        i = 0
+        for type in label:
+            result += "Photo " + str(i) + " is " + type + '\n'
+            i = i + 1
 
         return render_template('try_machine.html', filename=filename, result=result)
 

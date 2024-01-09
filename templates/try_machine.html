@@ -11,7 +11,7 @@
 
     <form action="{{ url_for('try_machine', filename=filename, result=result) }}" method="post" enctype="multipart/form-data">
         <label for="file">Select images:</label>
-        <input type="file" id="file" name="photos[]" accept="image/*" multiple>
+        <input type="file" id="file" name="photos[]" multiple>
         <br>
         <label for="myTextBox">What was detected:</label>
         <textarea id="detect" name="detect" rows="10" cols="50">{{ result }}</textarea>
