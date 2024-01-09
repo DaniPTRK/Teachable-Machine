@@ -10,13 +10,22 @@
     <h1>Image upload</h1>
 
     <form action="{{ url_for('upload_photos') }}" method="post" enctype="multipart/form-data">
-        <label for="myTextBox">What to detect:</label>
+        <label for="myTextBox">What to detect for class :</label>
+        <input type="text" id="text_input" name="text_input">
+        <br>
+        <label for="file">Select images:</label>
+        <input type="file" id="file" name="photo_upload[]" accept="image/*" multiple>
+        <br>
+        <label for="myTextBox">What to detect for class:</label>
         <input type="text" id="text_input" name="text_input">
         <br>
         <label for="file">Select images:</label>
         <input type="file" id="file" name="photo_upload[]" accept="image/*" multiple>
         <br>
         <input type="submit" value="Upload images">
+        <br>
+
+        
 
         {% if error %}
         <p>{{ error }}</p>

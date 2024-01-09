@@ -5,6 +5,8 @@ from os import path
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
+from machine import train
+# importing essentials for training/testing a machine
 
 # initiating site
 app = Flask(__name__)
@@ -132,25 +134,31 @@ def allowed_file(filename):
 def upload_photos():
     if request.method == 'POST':
         # process the uploaded data as needed
-        target = request.form['text_input']
-        uploaded_files = request.files.getlist('photo_upload[]')
+        num_classes = 2
+        target = []
+        uploaded_files = []
         uploaded_photos = []
+
+        # extract data from given classes - hopefully we'll implement more than 2 classes
+        for i in range(num_classes):
+            target.append(request.form['text_input'])
+            uploaded_files.append(request.files.getlist('photo_upload[]'))
         result = None
+        for i in range(num_classes):
+            if not target:
+                return render_template('upload_photos.html', error=f"Please enter what to detect")
 
-        if not target:
-            return render_template('upload_photos.html', error=f"Please enter what to detect")
-
-        for file in uploaded_files:
-            if file.filename == '':
-                return render_template('upload_photos.html', error=f"No file selected")
+            for file in uploaded_files[i]:
+                if file.filename == '':
+                    return render_template('upload_photos.html', error=f"No file selected")
 
             if file and allowed_file(file.filename):
                 uploaded_photos.append(file)
 
-        if not uploaded_photos:
-            return render_template('upload_photos.html', error=f"No valid image selected")
+            if not uploaded_photos[i]:
+                return render_template('upload_photos.html', error=f"No valid image selected")
         
-        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos))
+        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes))
 
     else:
         result = None
@@ -162,11 +170,14 @@ def upload_photos():
 @login_required
 def create_machine():
     if request.method == 'POST':
+        target = []
+        uploaded_photos = []
         target = request.args['target']
         uploaded_photos = request.args['uploaded_photos']
+        num_classes = request.args['num_classes']
         machine_name = request.form['machine_name']
-
-        # here to create machine i think
+        # create a machine
+        train(target, uploaded_photos, machine_name, num_classes)
 
     return render_template("create_machine.html")
 
@@ -294,7 +305,7 @@ def try_machine(filename):
         if not uploaded_photos:
             return render_template('upload_photos.html', error=f"No valid image selected")
 
-        # waiting for code for tryig machine
+        # waiting for code for trying machine
 
         # placeholder result for demonstration
         result = "Placeholder result for the uploaded photo."

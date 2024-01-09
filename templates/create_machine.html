@@ -7,7 +7,7 @@
 </head>
 <body>
 
-    <form action="{{ url_for('create_machine', target = target, uploaded_photos = uploaded_photos) }}" method="post" enctype="multipart/form-data">
+    <form action="{{ url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes) }}" method="post" enctype="multipart/form-data">
         <label for="machine_name">Machine name:</label>
         <input type="text" id="machine_name" name="machine_name">
         <button type="submit">Login</button>
