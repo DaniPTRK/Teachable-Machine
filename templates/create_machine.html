@@ -1,24 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create machine</title>
+
+    <link rel="stylesheet" href="../static/style.css">
 </head>
+
 <body>
 
-    <form action="{{ url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes) }}" method="post" enctype="multipart/form-data">
-        <label for="machine_name">Machine name:</label>
-        <input type="text" id="machine_name" name="machine_name">
-        <button type="submit">Submit</button>
-        
-        {% if error %}
-        <p>{{ error }}</p>
-        {% endif %}
+    <div class="container">
+        <h1>Create machine</h1>
+        <form
+            action="{{ url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes) }}"
+            method="post" enctype="multipart/form-data">
+            <label for="machine_name">Machine name:</label>
+            <input type="text" id="machine_name" name="machine_name">
+            <p><button type="submit">Submit</button></p>
 
-    </form>
+            {% if error %}
+            <p>{{ error }}</p>
+            {% endif %}
 
-    <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+            <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+        </form>
+
+    </div>
 
 </body>
+
 </html>

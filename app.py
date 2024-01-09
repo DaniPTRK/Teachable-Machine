@@ -70,7 +70,7 @@ def login():
             else:
                 flash('Incorrect password', category='error')
         else:
-            flash('Incorrect password', category='error')
+            flash('User not found', category='error')
 
     return render_template("login.html")
 
@@ -264,7 +264,7 @@ def remove_file():
     else:
         flash("Machine not found", category='error')
 
-    return redirect(url_for('machines'))
+    return redirect(url_for('your_machines'))
 
 
 # download machines page
