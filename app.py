@@ -228,6 +228,40 @@ def upload_machine():
 
     return render_template('upload_machine.html')
 
+# your machines page
+@app.route("/your_machines")
+@login_required
+def your_machines():
+    models = Machine.query.filter_by(user_id=current_user.id).all()
+    return render_template('your_machines.html', models=models)
+
+# remove machine
+@app.route("/remove_file")
+@login_required
+def remove_file():
+    filename = request.args['filename']
+    machine = Machine.query.filter_by(filename=filename).first()
+
+    # Check if the machine exists
+    if machine:
+        try:
+            # Remove the associated file
+            file_path = os.path.join(app.config['UPLOAD_FOLDER1'], filename + '.h5')
+            os.remove(file_path)
+
+            # Remove the machine record from the database
+            db.session.delete(machine)
+            db.session.commit()
+
+            flash("Machine removed successfully", category='success')
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}", category='error')
+    else:
+        flash("Machine not found", category='error')
+
+    return redirect(url_for('machines'))
+
+
 # download machines page
 @app.route("/machines")
 @login_required

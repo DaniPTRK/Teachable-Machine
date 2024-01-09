@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Machines</title>
+</head>
+<body>
+
+    {% if error %}
+        <p>{{ error }}</p>
+    {% else %}
+    <h1>Machines list</h1>
+
+    <ul>
+        {% for machine in models %}
+            <li>
+                <p>
+                    <a href="{{ url_for('download_file', filename = machine.filename ) }}">{{ machine.name }}</a>
+                    <a href="{{ url_for('try_machine', filename=machine.filename) }}">Try</a>
+                    <a href="{{ url_for('remove_file', filename=machine.filename) }}">Remove</a>
+                </p>
+                </p>
+            </li>
+        {% endfor %}
+    </ul>
+    
+    <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+    {% endif %}
+
+</body>
+</html>
