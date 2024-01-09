@@ -66,7 +66,6 @@ def login():
 
         if user:
             if check_password_hash(user.password, password):
-                flash("Logged in successfully", category='success')
                 login_user(user, remember=True)
                 return redirect(url_for('main_page'))
             else:
@@ -256,7 +255,18 @@ def try_machine(filename):
     # handle POST request when the user uploads a photo
     if request.method == 'POST':
         # get the uploaded photo
-        uploaded_photo = request.files['photo']
+        uploaded_files = request.files.getlist('photos[]')
+        uploaded_photos = []
+
+        for file in uploaded_files:
+            if file.filename == '':
+                return render_template('upload_photos.html', error=f"No file selected")
+
+            if file and allowed_file(file.filename):
+                uploaded_photos.append(file)
+
+        if not uploaded_photos:
+            return render_template('upload_photos.html', error=f"No valid image selected")
 
         # waiting for code for tryig machine
 
@@ -265,7 +275,7 @@ def try_machine(filename):
 
         return render_template('try_machine.html', filename=filename, result=result)
 
-    return render_template('try_machine.html', filename=filename, result=None)
+    return render_template('try_machine.html', filename=filename, result='')
 
 with app.app_context():
     create_database()

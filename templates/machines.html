@@ -14,7 +14,13 @@
 
     <ul>
         {% for machine in models %}
-            <li><p><a href="{{ url_for('download_file', filename = machine.filename ) }}">{{ machine.name }}</a></p></li>
+            <li>
+                <p>
+                    <a href="{{ url_for('download_file', filename = machine.filename ) }}">{{ machine.name }}</a>
+                    <a href="{{ url_for('try_machine', filename=machine.filename) }}">Try</a>
+                </p>
+                </p>
+            </li>
         {% endfor %}
     </ul>
     
