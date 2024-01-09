@@ -169,6 +169,11 @@ def upload_photos():
         # train the machine
         path = train(target, uploaded_photos, machine_name, num_classes)
 
+        # save to database
+        new_model = Machine(name=machine_name, filename=path, user_id=current_user.id)
+        db.session.add(new_model)
+        db.session.commit()
+        
         return redirect(url_for('main_page'))
 
     else:
