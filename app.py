@@ -41,7 +41,7 @@ def create_database():
         print('Database created!')
 
 # login manager
-login_manager = LoginManager()
+login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'
 login_manager.init_app(app)
 
@@ -111,7 +111,7 @@ def signup():
             db.session.commit()
             flash("Account created!", category='success')
 
-            login_user(user, remember=True)
+            login_user(new_user, remember=True)
             return redirect(url_for('main_page'))
         
     return render_template("signup.html")
@@ -123,6 +123,7 @@ def home():
     return redirect(url_for("auth.login"))
 
 @app.route("/main_page")
+@login_required
 def main_page():
     return render_template("home.html")
 
@@ -131,6 +132,7 @@ def allowed_file(filename):
 
 # get target and photos from user
 @app.route("/upload_photos", methods=['GET', 'POST'])
+@login_required
 def upload_photos():
     if request.method == 'POST':
         # process the uploaded data as needed
@@ -167,6 +169,7 @@ def upload_photos():
 
 # create machine
 @app.route("/create_machine")
+@login_required
 def create_machine():
     target = request.args['target']
     uploaded_photos = request.args['uploaded_photos']
@@ -182,11 +185,13 @@ def generate_unique_filename():
 
 # upload successful
 @app.route("/upload_success")
+@login_required
 def upload_success():
     return render_template('upload_success.html')
 
 # submit machine
 @app.route("/upload_machine", methods=['POST', 'GET'])
+@login_required
 def upload_machine():
     if request.method == 'POST':
         # get the submitted file
@@ -226,12 +231,14 @@ def upload_machine():
 
 # download machines page
 @app.route("/machines")
+@login_required
 def machines():
     models = Machine.query.all()
     return render_template('machines.html', models=models)
 
 # download machine file
 @app.route("/download_file")
+@login_required
 def download_file():
     filename = request.args['filename']
     machine = Machine.query.filter_by(filename=filename).first()
@@ -244,6 +251,7 @@ def download_file():
 
 # try machine page
 @app.route("/try_machine/<filename>", methods=['GET', 'POST'])
+@login_required
 def try_machine(filename):
     # handle POST request when the user uploads a photo
     if request.method == 'POST':
@@ -261,7 +269,6 @@ def try_machine(filename):
 
 with app.app_context():
     create_database()
-
 
 if __name__ == "__main__":
     app.run(debug=True)
