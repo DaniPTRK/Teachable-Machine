@@ -5,7 +5,8 @@ from os import path
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
-from machine import train
+
+# initfrom machine import train
 # importing essentials for training/testing a machine
 
 # initiating site
@@ -307,14 +308,6 @@ def try_machine(filename):
 
         # waiting for code for trying machine
 
-        # placeholder result for demonstration
-        result = "Placeholder result for the uploaded photo."
-
-        return render_template('try_machine.html', filename=filename, result=result)
-
-    return render_template('try_machine.html', filename=filename, result='')
-
-with app.app_context():
     create_database()
 
 if __name__ == "__main__":
