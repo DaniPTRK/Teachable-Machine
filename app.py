@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, flash, render_template, request, redirect, url_for, send_file
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, login_required, logout_user, current_user, LoginManager
 from os import path
@@ -40,7 +40,6 @@ class Machine(db.Model):
 def create_database():
     if not path.exists("database.db"):
         db.create_all()
-        print('Database created!')
 
 # login manager
 login_manager = LoginManager(app)
@@ -313,9 +312,9 @@ def try_machine(filename):
         # placeholder result for demonstration
         label = ("pisica", "papagal", "papagal", "pisica")
         result = ""
-        i = 1
+        i = 0
         for type in label:
-            result += "Photo " + str(i) + " is " + type + '\n'
+            result += uploaded_photos[i].filename + " is " + type + '\n'
             i = i + 1
 
         return render_template('try_machine.html', filename=filename, result=result)
