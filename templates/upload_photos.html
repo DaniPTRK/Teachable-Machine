@@ -16,16 +16,16 @@
 
         <form action="{{ url_for('upload_photos') }}" method="post" enctype="multipart/form-data">
             <label for="myTextBox">What to detect for class :</label>
-            <input type="text" id="text_input" name="text_input">
+            <input type="text" id="text_input" name="text_input1">
             <br>
             <label for="file">Select images:</label>
-            <input type="file" id="file" name="photo_upload[]" accept="image/*" multiple>
+            <input type="file" id="file" name="photo_upload1" accept="image/*" multiple>
             <br>
             <label for="myTextBox">What to detect for class:</label>
-            <input type="text" id="text_input" name="text_input">
+            <input type="text" id="text_input" name="text_input2">
             <br>
             <label for="file">Select images:</label>
-            <input type="file" id="file" name="photo_upload[]" accept="image/*" multiple>
+            <input type="file" id="file" name="photo_upload2" accept="image/*" multiple>
             <br>
             <p><button type="submit">Upload images</button></p>
             <br>

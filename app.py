@@ -74,7 +74,7 @@ def login():
             else:
                 return render_template('login.html', error=f"Incorrect password")
         else:
-            flash('Incorrect password', category='error')
+            return render_template('login.html', error=f"Incorrect email")
 
     return render_template("login.html")
 
@@ -144,8 +144,8 @@ def upload_photos():
 
         # extract data from given classes - hopefully we'll implement more than 2 classes
         for i in range(num_classes):
-            target.append(request.form['text_input'])
-            uploaded_files.append(request.files.getlist('photo_upload[]'))
+            target.append(request.form['text_input' + str(i + 1)])
+            uploaded_files.append(request.files.getlist('photo_upload' + str(i + 1)))
         result = None
         for i in range(num_classes):
             if not target:
@@ -175,13 +175,11 @@ def create_machine():
     if request.method == 'POST':
         target = []
         uploaded_photos = []
-        target = request.args['target']
-        uploaded_photos = request.args['uploaded_photos']
+        target = request.args.get('target')
+        uploaded_photos = request.args.get('uploaded_photos')
         num_classes = len(uploaded_photos)
         machine_name = request.form['machine_name']
         train(target, uploaded_photos, machine_name, num_classes)
-
-
 
     return render_template("create_machine.html")
 
