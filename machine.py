@@ -1,4 +1,5 @@
 import tensorflow as tf
+import random as rd
 from tensorflow.keras import layers, models, utils
 from PIL import Image
 
@@ -39,13 +40,17 @@ def resize_images(uploaded_photos):
 def train(target, uploaded_photos, machine_name, num_classes):
     # resize the photos first
     uploaded_photos = resize_images(uploaded_photos)
+    all_data = []
+    # failed attempt for obtaining training and validation data
+    # train_data = utils.image_dataset_from_directory(uploaded_photos, validation_split = 0.2, subset = "training", seed = 123,
+    #                                                 image_size = (img_height, img_width), batch_size=batch_size)
+    # valid_Data = utils.image_dataset_from_directory(uploaded_photos, validation_split = 0.2, subset = "validation", seed = 123,
+    #                                                 image_size = (img_height, img_width), batch_size=batch_size)
 
     # use 80% of images for training and 20% for validation
-    train_data = utils.image_dataset_from_directory(uploaded_photos, validation_split = 0.2, subset = "training", 
-                                                    image_size = (img_height, img_width), batch_size=batch_size)
-    valid_Data = utils.image_dataset_from_directory(uploaded_photos, validation_split = 0.2, subset = "validation", 
-                                                    image_size = (img_height, img_width), batch_size=batch_size)
-    
+    for i in range(num_classes):
+        all_data.append(uploaded_photos[i])
+    rd.shuffle(all_data)
     #set class names
     class_names = target
     

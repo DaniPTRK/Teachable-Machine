@@ -5,6 +5,7 @@ from os import path
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
+from machine import train
 
 # initfrom machine import train
 # importing essentials for training/testing a machine
@@ -159,7 +160,7 @@ def upload_photos():
             if not uploaded_photos[i]:
                 return render_template('upload_photos.html', error=f"No valid image selected")
         
-        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes))
+        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos))
 
     else:
         result = None
@@ -175,9 +176,8 @@ def create_machine():
         uploaded_photos = []
         target = request.args['target']
         uploaded_photos = request.args['uploaded_photos']
-        num_classes = request.args['num_classes']
+        num_classes = len(uploaded_photos)
         machine_name = request.form['machine_name']
-        # create a machine
         train(target, uploaded_photos, machine_name, num_classes)
 
     return render_template("create_machine.html")
