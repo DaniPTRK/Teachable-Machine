@@ -305,7 +305,7 @@ def try_machine(filename):
         if not uploaded_photos:
             return render_template('upload_photos.html', error=f"No valid image selected")
 
-        # waiting for code for tryig machine
+        # waiting for code for trying machine
 
         # placeholder result for demonstration
         result = "Placeholder result for the uploaded photo."
