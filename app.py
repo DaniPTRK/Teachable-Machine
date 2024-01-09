@@ -15,10 +15,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-PHOTO_UPLOAD_FOLDER = 'photo_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-app.config['UPLOAD_FOLDER'] = PHOTO_UPLOAD_FOLDER
 
 # user database
 class User(db.Model, UserMixin):
@@ -138,7 +135,6 @@ def upload_photos():
         target = request.form['text_input']
         uploaded_files = request.files.getlist('photo_upload[]')
         uploaded_photos = []
-        photonames = []
         result = None
 
         if not target:
@@ -153,12 +149,7 @@ def upload_photos():
 
         if not uploaded_photos:
             return render_template('upload_photos.html', error=f"No valid image selected")
-
-        for photo in uploaded_photos:
-            filename = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
-            photo.save(filename)
-            photonames.append(photo.filename)
-
+        
         return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos))
 
     else:
@@ -167,14 +158,15 @@ def upload_photos():
     return render_template('upload_photos.html', result=result)
 
 # create machine
-@app.route("/create_machine")
+@app.route("/create_machine", methods=['GET', 'POST'])
 @login_required
 def create_machine():
-    target = request.args['target']
-    uploaded_photos = request.args['uploaded_photos']
-    machine_name = request.form['machine_name']
+    if request.method == 'POST':
+        target = request.args['target']
+        uploaded_photos = request.args['uploaded_photos']
+        machine_name = request.form['machine_name']
 
-    # here to create machine i think
+        # here to create machine i think
 
     return render_template("create_machine.html")
 
