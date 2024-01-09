@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload images</title>
+</head>
+<body>
+
+    <h1>Try machine</h1>
+
+    <form action="{{ url_for('try_machine', filename=filename, result=result) }}" method="post" enctype="multipart/form-data">
+        <label for="file">Select images:</label>
+        <input type="file" id="file" name="photos[]" accept="image/*" multiple>
+        <br>
+        <label for="myTextBox">What was detected:</label>
+        <textarea id="detect" name="detect" rows="10" cols="50">{{ result }}</textarea>
+        <br>
+        <input type="submit" value="Test images">
+
+        {% if error %}
+        <p>{{ error }}</p>
+        {% endif %}
+
+    </form>
+
+    <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+
+</body>
+</html>

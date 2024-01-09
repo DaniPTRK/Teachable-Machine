@@ -5,6 +5,8 @@ from os import path
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
+from machine import train
+# importing essentials for training/testing a machine
 
 # initiating site
 app = Flask(__name__)
@@ -15,10 +17,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
-PHOTO_UPLOAD_FOLDER = 'photo_uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
-
-app.config['UPLOAD_FOLDER'] = PHOTO_UPLOAD_FOLDER
 
 # user database
 class User(db.Model, UserMixin):
@@ -41,7 +40,7 @@ def create_database():
         print('Database created!')
 
 # login manager
-login_manager = LoginManager()
+login_manager = LoginManager(app)
 login_manager.login_view = 'auth.login'
 login_manager.init_app(app)
 
@@ -66,7 +65,6 @@ def login():
 
         if user:
             if check_password_hash(user.password, password):
-                flash("Logged in successfully", category='success')
                 login_user(user, remember=True)
                 return redirect(url_for('main_page'))
             else:
@@ -111,7 +109,7 @@ def signup():
             db.session.commit()
             flash("Account created!", category='success')
 
-            login_user(user, remember=True)
+            login_user(new_user, remember=True)
             return redirect(url_for('main_page'))
         
     return render_template("signup.html")
@@ -123,6 +121,7 @@ def home():
     return redirect(url_for("auth.login"))
 
 @app.route("/main_page")
+@login_required
 def main_page():
     return render_template("home.html")
 
@@ -131,34 +130,35 @@ def allowed_file(filename):
 
 # get target and photos from user
 @app.route("/upload_photos", methods=['GET', 'POST'])
+@login_required
 def upload_photos():
     if request.method == 'POST':
         # process the uploaded data as needed
-        target = request.form['text_input']
-        uploaded_files = request.files.getlist('photo_upload[]')
+        num_classes = 2
+        target = []
+        uploaded_files = []
         uploaded_photos = []
-        photonames = []
+
+        # extract data from given classes - hopefully we'll implement more than 2 classes
+        for i in range(num_classes):
+            target.append(request.form['text_input'])
+            uploaded_files.append(request.files.getlist('photo_upload[]'))
         result = None
+        for i in range(num_classes):
+            if not target:
+                return render_template('upload_photos.html', error=f"Please enter what to detect")
 
-        if not target:
-            return render_template('upload_photos.html', error=f"Please enter what to detect")
-
-        for file in uploaded_files:
-            if file.filename == '':
-                return render_template('upload_photos.html', error=f"No file selected")
+            for file in uploaded_files[i]:
+                if file.filename == '':
+                    return render_template('upload_photos.html', error=f"No file selected")
 
             if file and allowed_file(file.filename):
                 uploaded_photos.append(file)
 
-        if not uploaded_photos:
-            return render_template('upload_photos.html', error=f"No valid image selected")
-
-        for photo in uploaded_photos:
-            filename = os.path.join(app.config['UPLOAD_FOLDER'], photo.filename)
-            photo.save(filename)
-            photonames.append(photo.filename)
-
-        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos))
+            if not uploaded_photos[i]:
+                return render_template('upload_photos.html', error=f"No valid image selected")
+        
+        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes))
 
     else:
         result = None
@@ -166,13 +166,18 @@ def upload_photos():
     return render_template('upload_photos.html', result=result)
 
 # create machine
-@app.route("/create_machine")
+@app.route("/create_machine", methods=['GET', 'POST'])
+@login_required
 def create_machine():
-    target = request.args['target']
-    uploaded_photos = request.args['uploaded_photos']
-    machine_name = request.form['machine_name']
-
-    # here to create machine i think
+    if request.method == 'POST':
+        target = []
+        uploaded_photos = []
+        target = request.args['target']
+        uploaded_photos = request.args['uploaded_photos']
+        num_classes = request.args['num_classes']
+        machine_name = request.form['machine_name']
+        # create a machine
+        train(target, uploaded_photos, machine_name, num_classes)
 
     return render_template("create_machine.html")
 
@@ -182,11 +187,13 @@ def generate_unique_filename():
 
 # upload successful
 @app.route("/upload_success")
+@login_required
 def upload_success():
     return render_template('upload_success.html')
 
 # submit machine
 @app.route("/upload_machine", methods=['POST', 'GET'])
+@login_required
 def upload_machine():
     if request.method == 'POST':
         # get the submitted file
@@ -224,14 +231,50 @@ def upload_machine():
 
     return render_template('upload_machine.html')
 
+# your machines page
+@app.route("/your_machines")
+@login_required
+def your_machines():
+    models = Machine.query.filter_by(user_id=current_user.id).all()
+    return render_template('your_machines.html', models=models)
+
+# remove machine
+@app.route("/remove_file")
+@login_required
+def remove_file():
+    filename = request.args['filename']
+    machine = Machine.query.filter_by(filename=filename).first()
+
+    # Check if the machine exists
+    if machine:
+        try:
+            # Remove the associated file
+            file_path = os.path.join(app.config['UPLOAD_FOLDER1'], filename + '.h5')
+            os.remove(file_path)
+
+            # Remove the machine record from the database
+            db.session.delete(machine)
+            db.session.commit()
+
+            flash("Machine removed successfully", category='success')
+        except Exception as e:
+            flash(f"An error occurred: {str(e)}", category='error')
+    else:
+        flash("Machine not found", category='error')
+
+    return redirect(url_for('machines'))
+
+
 # download machines page
 @app.route("/machines")
+@login_required
 def machines():
     models = Machine.query.all()
     return render_template('machines.html', models=models)
 
 # download machine file
 @app.route("/download_file")
+@login_required
 def download_file():
     filename = request.args['filename']
     machine = Machine.query.filter_by(filename=filename).first()
@@ -244,24 +287,35 @@ def download_file():
 
 # try machine page
 @app.route("/try_machine/<filename>", methods=['GET', 'POST'])
+@login_required
 def try_machine(filename):
     # handle POST request when the user uploads a photo
     if request.method == 'POST':
         # get the uploaded photo
-        uploaded_photo = request.files['photo']
+        uploaded_files = request.files.getlist('photos[]')
+        uploaded_photos = []
 
-        # waiting for code for tryig machine
+        for file in uploaded_files:
+            if file.filename == '':
+                return render_template('upload_photos.html', error=f"No file selected")
+
+            if file and allowed_file(file.filename):
+                uploaded_photos.append(file)
+
+        if not uploaded_photos:
+            return render_template('upload_photos.html', error=f"No valid image selected")
+
+        # waiting for code for trying machine
 
         # placeholder result for demonstration
         result = "Placeholder result for the uploaded photo."
 
         return render_template('try_machine.html', filename=filename, result=result)
 
-    return render_template('try_machine.html', filename=filename, result=None)
+    return render_template('try_machine.html', filename=filename, result='')
 
 with app.app_context():
     create_database()
-
 
 if __name__ == "__main__":
     app.run(debug=True)
