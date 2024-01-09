@@ -1,30 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload machine</title>
+
+    <link rel="stylesheet" href="../static/style.css">
 </head>
+
 <body>
 
-    <h1>Machine upload</h1>
+    <div class="container">
+        <h1>Machine upload</h1>
 
-    <form action="{{ url_for('upload_machine') }}" method="post" enctype="multipart/form-data">
-        <label for="myTextBox">Machine name:</label>
-        <input type="text" id="machine_name" name="machine_name">
-        <br>
-        <label for="file">Select file:</label>
-        <input type="file" id="file" name="machine_file" accept=".h5">
-        <br>
-        <input type="submit" value="Upload file">
+        <form action="{{ url_for('upload_machine') }}" method="post" enctype="multipart/form-data">
+            <label for="myTextBox">Machine name:</label>
+            <input type="text" id="machine_name" name="machine_name">
+            <br>
+            <label for="file">Select file:</label>
+            <input type="file" id="file" name="machine_file" accept=".h5">
+            <br>
+            <p><button type="submit">Upload file</button></p>
 
-        {% if error %}
-        <p>{{ error }}</p>
-        {% endif %}
+            {% if error %}
+            <p>{{ error }}</p>
+            {% endif %}
 
-    </form>
+        </form>
 
-    <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+        <p><a href="{{ url_for('main_page') }}">Back to home menu</a></p>
+    </div>
 
 </body>
+
 </html>

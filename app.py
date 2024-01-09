@@ -74,7 +74,7 @@ def login():
             else:
                 return render_template('login.html', error=f"Incorrect password")
         else:
-            return render_template('login.html', error=f"Email incorrect")
+            flash('Incorrect password', category='error')
 
     return render_template("login.html")
 
@@ -180,6 +180,8 @@ def create_machine():
         num_classes = len(uploaded_photos)
         machine_name = request.form['machine_name']
         train(target, uploaded_photos, machine_name, num_classes)
+
+
 
     return render_template("create_machine.html")
 
