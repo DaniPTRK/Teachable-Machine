@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, send_file
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, send_file, session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, login_required, logout_user, current_user, LoginManager
 from os import path
@@ -142,6 +142,11 @@ def upload_photos():
         uploaded_files = []
         uploaded_photos = []
 
+        # extract machine name
+        machine_name = request.form['machine_name']
+        if not machine_name:
+            return render_template('upload_photos.html', error="Please enter machine name")
+
         # extract data from given classes - hopefully we'll implement more than 2 classes
         for i in range(num_classes):
             target.append(request.form['text_input' + str(i + 1)])
@@ -160,8 +165,11 @@ def upload_photos():
 
             if not uploaded_photos[i]:
                 return render_template('upload_photos.html', error="No valid image selected")
-        
-        return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos))
+            
+        # train the machine
+        path = train(target, uploaded_photos, machine_name, num_classes)
+
+        return redirect(url_for('main_page'))
 
     else:
         result = None
@@ -169,19 +177,17 @@ def upload_photos():
     return render_template('upload_photos.html', result=result)
 
 # create machine
-@app.route("/create_machine", methods=['GET', 'POST'])
-@login_required
-def create_machine():
-    if request.method == 'POST':
-        target = []
-        uploaded_photos = []
-        target = request.args.get('target')
-        uploaded_photos = request.args.get('uploaded_photos')
-        num_classes = len(uploaded_photos)
-        machine_name = request.form['machine_name']
-        train(target, uploaded_photos, machine_name, num_classes)
+# @app.route("/create_machine", methods=['GET', 'POST'])
+# @login_required
+# def create_machine():
+#     if request.method == 'POST':
+#         target = session.pop('target', None)
+#         uploaded_photos = session.pop('uploaded_photos', None)
+#         num_classes = len(uploaded_photos)
+#         machine_name = request.form['machine_name']
+#         train(target, uploaded_photos, machine_name, num_classes)
 
-    return render_template("create_machine.html")
+#     return render_template("create_machine.html")
 
 # generate a unique filename
 def generate_unique_filename():

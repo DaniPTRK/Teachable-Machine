@@ -15,6 +15,8 @@
         <h1>Image upload</h1>
 
         <form action="{{ url_for('upload_photos') }}" method="post" enctype="multipart/form-data">
+            <label for="machine_name">Machine name:</label>
+            <input type="text" id="machine_name" name="machine_name">
             <label for="myTextBox">What to detect for class :</label>
             <input type="text" id="text_input" name="text_input1">
             <br>
