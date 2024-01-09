@@ -179,6 +179,8 @@ def create_machine():
         # create a machine
         train(target, uploaded_photos, machine_name, num_classes)
 
+
+
     return render_template("create_machine.html")
 
 # generate a unique filename
