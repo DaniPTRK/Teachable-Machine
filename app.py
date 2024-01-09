@@ -71,9 +71,9 @@ def login():
                 login_user(user, remember=True)
                 return redirect(url_for('main_page'))
             else:
-                flash('Incorrect password', category='error')
+                return render_template('login.html', error=f"Incorrect password")
         else:
-            flash('Incorrect password', category='error')
+            return render_template('login.html', error=f"Email incorrect")
 
     return render_template("login.html")
 
@@ -96,21 +96,20 @@ def signup():
         user = User.query.filter_by(email=email).first()
 
         if user:
-            flash('Email already exists', category='error')
+            return render_template('signup.html', error=f"Email already exists")
         elif len(email) < 6:
-            flash("Email too short", category='error')
+            return render_template('signup.html', error=f"Email too short")
         elif len(username) < 3:
-            flash("Username too short", category='error')
+            return render_template('signup.html', error=f"Username too short")
         elif password != confirm:
-            flash("Passwords don\'t match", category='error')
+            return render_template('signup.html', error=f"Passwords don\'t match")
         elif len(password) < 7:
-            flash("Passwords too short", category='error')
+            return render_template('signup.html', error=f"Passwords too short")
         else:
             new_user = User(email=email, username=username,
                             password=generate_password_hash(password, method='pbkdf2:sha256'))
             db.session.add(new_user)
             db.session.commit()
-            flash("Account created!", category='success')
 
             login_user(new_user, remember=True)
             return redirect(url_for('main_page'))
@@ -149,17 +148,17 @@ def upload_photos():
         result = None
         for i in range(num_classes):
             if not target:
-                return render_template('upload_photos.html', error=f"Please enter what to detect")
+                return render_template('upload_photos.html', error="Please enter what to detect")
 
             for file in uploaded_files[i]:
                 if file.filename == '':
-                    return render_template('upload_photos.html', error=f"No file selected")
+                    return render_template('upload_photos.html', error="No file selected")
 
             if file and allowed_file(file.filename):
                 uploaded_photos.append(file)
 
             if not uploaded_photos[i]:
-                return render_template('upload_photos.html', error=f"No valid image selected")
+                return render_template('upload_photos.html', error="No valid image selected")
         
         return redirect(url_for('create_machine', target = target, uploaded_photos = uploaded_photos, num_classes = num_classes))
 
@@ -208,12 +207,12 @@ def upload_machine():
             machine_name = request.form['machine_name']
 
             if not machine_name:
-                return render_template('upload_machine.html', error='Please enter a name for your machine.')
+                return render_template('upload_machine.html', error=f'Please enter a name for your machine.')
 
             existing_machine = Machine.query.filter_by(name=machine_name).first()
 
             if existing_machine:
-                return render_template('upload_machine.html', error='Machine name already taken. Please choose a different name.')
+                return render_template('upload_machine.html', error=f'Machine name already taken. Please choose a different name.')
 
             # unique filename
             unique_filename = generate_unique_filename()
@@ -258,14 +257,12 @@ def remove_file():
             # Remove the machine record from the database
             db.session.delete(machine)
             db.session.commit()
-
-            flash("Machine removed successfully", category='success')
         except Exception as e:
-            flash(f"An error occurred: {str(e)}", category='error')
+            return render_template('your_machines.html', error=f"An error occured")
     else:
-        flash("Machine not found", category='error')
+        return render_template('your_machines.html', error=f"Machine not found")
 
-    return redirect(url_for('machines'))
+    return redirect(url_for('your_machines'))
 
 
 # download machines page
@@ -316,7 +313,7 @@ def try_machine(filename):
         # placeholder result for demonstration
         label = ("pisica", "papagal", "papagal", "pisica")
         result = ""
-        i = 0
+        i = 1
         for type in label:
             result += "Photo " + str(i) + " is " + type + '\n'
             i = i + 1
