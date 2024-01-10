@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, render_template, request, redirect, url_for, send_file, session
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, send_file
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin, login_user, login_required, logout_user, current_user, LoginManager
 from os import path
@@ -352,7 +352,7 @@ def try_machine(filename):
         # print for each photo the prediction
         for photo in uploaded_photos:
             label, confidence = predict(labels_list, machine.filename, photo)
-            result += photo.filename + " is " + label + " with a confidence of " + str(confidence) + '\n'
+            result += photo.filename + " is " + label + " with a confidence of " + str(round(confidence, 2)) + '\n'
 
         return render_template('try_machine.html', filename=filename, result=result)
 
