@@ -138,9 +138,9 @@ def upload_photos():
     if request.method == 'POST':
         # process the uploaded data as needed
         num_classes = 2
-        target = []
-        uploaded_files = []
-        uploaded_photos = []
+        target = [[] for _ in range(num_classes)]
+        uploaded_files = [[] for _ in range(num_classes)]
+        uploaded_photos = [[] for _ in range(num_classes)]
 
         # extract machine name
         machine_name = request.form['machine_name']
@@ -149,19 +149,20 @@ def upload_photos():
 
         # extract data from given classes - hopefully we'll implement more than 2 classes
         for i in range(num_classes):
-            target.append(request.form['text_input' + str(i + 1)])
-            uploaded_files.append(request.files.getlist('photo_upload' + str(i + 1)))
+            target[i].append(request.form['text_input' + str(i + 1)])
+            uploaded_files[i].append(request.files.getlist('photo_upload' + str(i + 1)))
         result = None
         for i in range(num_classes):
             if not target:
                 return render_template('upload_photos.html', error="Please enter what to detect")
 
-            for file in uploaded_files[i]:
-                if file.filename == '':
-                    return render_template('upload_photos.html', error="No file selected")
+            for sublist in uploaded_files[i]:
+                for file in sublist:
+                    if file.filename == '':
+                        return render_template('upload_photos.html', error="No file selected")
 
             if file and allowed_file(file.filename):
-                uploaded_photos.append(file)
+                uploaded_photos[i].append(file)
 
             if not uploaded_photos[i]:
                 return render_template('upload_photos.html', error="No valid image selected")

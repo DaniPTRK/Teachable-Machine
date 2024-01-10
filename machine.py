@@ -1,5 +1,6 @@
 import random as rd
 import numpy as np
+from io import BytesIO
 from tensorflow.keras import layers, models, utils
 from PIL import Image
 
@@ -32,30 +33,39 @@ img_width = 180
 
 def resize_images(uploaded_photos):
     # resize each photo inside uploaded_photos
+    input_size = (img_height, img_width)
     for sublist in uploaded_photos:
-        for image in sublist:
-            image = image.resize((180, 180), Image.BILINEAR)
+        for photo in sublist:
+            photo = photo.resize(input_size, Image.BILINEAR)
     return uploaded_photos    
 
 def preprocess(X_data, Y_data, num_classes):
     # convert images to numpy arrays and normalize pixel values
     all_data = []
     all_labels = []
-
-    for labels in Y_data:
-        all_labels.append(Y_data)
+    x_data = []
+    i = 0
 
     for photo in X_data:
-        pixel_array = np.array(photo) / 255.0
-        all_data.append(pixel_array)
+        # transform bytes in rgb values
+        # pixel_array = np.array(photo)
+        numpy_array = np.frombuffer(photo, dtype = np.uint8)
+        normalize_image = numpy_array / 255.0
+        all_data.append(normalize_image)
+        all_labels.append(Y_data[i])
+        i = i+1
 
-    x_data = np.array(all_data)
+    for normalized in all_data:
+        x_data.append(np.array(normalized))
     y_data = utils.to_categorical(all_labels, num_classes=num_classes)
     return x_data, y_data
 
 def train(target, uploaded_photos, machine_name, num_classes):
-    # resize the photos first
-    uploaded_photos = resize_images(uploaded_photos)
+    # convert FileStorage to image and then resize it to the preferred sizes
+    actual_photos = [[] for _ in range(num_classes)]
+    for i in range(num_classes):
+        for photo_bytes in uploaded_photos[i]:
+            actual_photos[i].append(photo_bytes.read())
     x_data = []
     y_data = []
 
@@ -67,8 +77,7 @@ def train(target, uploaded_photos, machine_name, num_classes):
 
     # set labels
     for i in range(num_classes):
-        print("HELLO!")
-        for value in uploaded_photos[i]:
+        for value in actual_photos[i]:
             x_data.append(value)
             y_data.append(i)
     
@@ -90,7 +99,7 @@ def train(target, uploaded_photos, machine_name, num_classes):
     x_train, y_train = preprocess(X_data, Y_data, num_classes)
     
     # build and compile the model
-    model = build_model((img_height, img_width), num_classes)
+    model = build_model((img_height, img_width, 3), num_classes)
     model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics=['accuracy'])
     
     # train the model
@@ -98,6 +107,6 @@ def train(target, uploaded_photos, machine_name, num_classes):
 
     # save model
     model_export_path = f"{machine_name}_trained_model"
-    model.save(model_export_path)
+    model.save("/machines/" + model_export_path)
 
     return model
