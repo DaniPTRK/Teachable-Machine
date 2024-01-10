@@ -31,8 +31,8 @@ def build_model(input, num_classes):
 
 # define image & batch info
 batch_size = 32
-img_height = 180
-img_width = 180
+img_height = 500
+img_width = 500
 
 # === meant to be something ===
 # def resize_images(uploaded_photos):
