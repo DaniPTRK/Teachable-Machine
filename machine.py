@@ -1,5 +1,5 @@
 import os
-import random as rd
+from sklearn.model_selection import train_test_split
 import tensorflow as tf
 import numpy as np
 from io import BytesIO
@@ -22,17 +22,18 @@ def build_model(input, num_classes):
     model.add(layers.Flatten())
     
     # add dense layers to the model
-    model.add(layers.Dense(64, activation="relu"))
+    model.add(layers.Dense(256, activation="relu"))
+    model.add(layers.Dropout(0.5))
 
     # output layer
     model.add(layers.Dense(num_classes, activation="softmax"))
-    
+
     return model
 
 # define image & batch info
 batch_size = 32
-img_height = 500
-img_width = 500
+img_height = 240
+img_width = 240
 
 # === meant to be something ===
 # def resize_images(uploaded_photos):
@@ -65,7 +66,7 @@ def preprocess(X_data, Y_data, num_classes):
         i = i+1
 
     x_data = np.array (all_data)
-    y_data = utils.to_categorical(all_labels, num_classes=num_classes)
+    y_data = np.array (all_labels)
     return x_data, y_data
 
 # this is used for training a machine that's about to be uploaded
@@ -82,6 +83,8 @@ def train(uploaded_photos, machine_name, num_classes):
     # uploaded_photos = resize_images(uploaded_photos)
     x_data = []
     y_data = []
+    x_valid = []
+    y_valid = []
 
     # === failed attempt
     # train_data = utils.image_dataset_from_directory(uploaded_photos, validation_split = 0.2, subset = "training", seed = 123,
@@ -97,12 +100,20 @@ def train(uploaded_photos, machine_name, num_classes):
             y_data.append(i)
     
     
-    # zip so shuffle is consistent
-    temp = list(zip(x_data, y_data))
-    rd.shuffle(temp)
-    X_data, Y_data = zip(*temp)
-
     # === failed attempt
+    # zip so shuffle is consistent
+    # temp = list(zip(x_data, y_data))
+    # rd.shuffle(temp)
+    # X_data, Y_data = zip(*temp)
+    # for i in range(len(x_data)):
+    #     indices.append(i)
+    # rd.shuffle(indices)
+            
+    # append data afterwards
+    # for i in range(len(x_data)):
+    #     X_data.append(x_data[indices[i]])
+    #     Y_data.append(y_data[indices[i]])
+
     # # shuffle data & use 80% of images for training and 20% for validation
     # X_data = list(X_data)
     # Y_data = list(Y_data)
@@ -110,14 +121,23 @@ def train(uploaded_photos, machine_name, num_classes):
     # trainX_data = X_data[:index]
     # validX_data = X_data[index:]
     # trainY_data = Y_data[:index]
-    # validY_data = Y_data[index:]
+    # validY_data = Y_data[index:]  
     # ===
 
-    x_train, y_train = preprocess(X_data, Y_data, num_classes)
+    x_train, y_train = preprocess(x_data, y_data, num_classes)
+
+    # shuffle & split
+    # x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size = 0.2)
+
+    # index = int(len(x_train) * 0.8)
+    # x_traind = x_train[:index]
+    # x_valid = x_train[index:]
+    # y_traind = y_train[:index]
+    # y_valid = y_train[index:]
     
     # build and compile the model
     model = build_model((img_height, img_width, 3), num_classes)
-    model.compile(optimizer = 'adam', loss = 'categorical_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer = 'adam', loss = 'sparse_categorical_crossentropy', metrics=['accuracy'])
     
     # train the model
     model.fit(x_train, y_train, epochs = 10, batch_size = batch_size)

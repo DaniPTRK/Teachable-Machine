@@ -15,7 +15,11 @@ body {
     padding: 20px;
 }
 
-.login-form {
+form {
+    text-align: center;
+}
+
+div {
     text-align: center;
 }
 
