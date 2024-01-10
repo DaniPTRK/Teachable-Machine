@@ -1,8 +1,10 @@
 import os
 import random as rd
+import tensorflow as tf
 import numpy as np
 from io import BytesIO
 from tensorflow.keras import layers, models, utils
+from keras.models import save_model
 from PIL import Image
 
 def build_model(input, num_classes):
@@ -121,13 +123,35 @@ def train(uploaded_photos, machine_name, num_classes):
     model.fit(x_train, y_train, epochs = 10, batch_size = batch_size)
 
     # save model
-    model_file_name = "{machine_name}_trained_model"
-    model_filepath = os.path.join("machines", model_file_name)
-    model.save(model_filepath)
+    model_file_name = f"{machine_name}_trained_model"
+    model_file_format = model_file_name + ".h5"
+    model_filepath = os.path.join("machines", model_file_format)
+    save_model(model, model_filepath)
 
-    return model_filepath
+    return model_file_name
 
 # this is used for making predictions with an uploaded machine
-def predict(label, model_filepath, img):
+def predict(labels, model_filepath, img):
+    # extract model from given path
+    model_filepath += ".h5"
+    model_filepath = "./machines/" + model_filepath
+    model = tf.keras.models.load_model(model_filepath)
+
+    # extract image
+    input_size = (img_height, img_width)
     image = Image.open(BytesIO(img.read())).convert("RGB")
-    image = image.resize(input_size)
+
+    # resize image and prepare it for predictions by normalizing
+    resized_image = image.resize(input_size, Image.BILINEAR)
+    pixel_array = np.array(resized_image)
+    pixel_array = pixel_array / 255.0
+    pixel_array = np.expand_dims(pixel_array, axis = 0)
+    predictions = model.predict(pixel_array)
+
+    # get confidence from prediction
+    confidence_predictions = tf.nn.softmax(predictions)
+    confidence = np.max(confidence_predictions)
+
+    # extract predicted class
+    predicted_class = np.argmax(predictions)
+    return labels[predicted_class], confidence*100

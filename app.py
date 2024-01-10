@@ -169,12 +169,13 @@ def upload_photos():
                 return render_template('upload_photos.html', error="No valid image selected")
             
         # train the machine
-        path = train(target, uploaded_photos, machine_name, num_classes)
+        path = train(uploaded_photos, machine_name, num_classes)
 
         # saving the labels
         labels = ""
         for t in target:
-            labels += t + ", "
+            for string in t:
+                labels += string + ", "
 
         # Remove the last ", " if the string is not empty
         if labels:
@@ -345,14 +346,13 @@ def try_machine(filename):
         
         labels_list = [word.strip() for word in machine.labels.split(',')]
 
-        # waiting for code for tryig machine
-
-        # placeholder result for demonstration
-        label = ("pisica", "papagal", "papagal", "pisica")
+        # start predicting images
         result = ""
-        i, confidence = predict()
+
+        # print for each photo the prediction
         for photo in uploaded_photos:
-            result += photo.filename + " is " + type + predict() + '\n'
+            label, confidence = predict(labels_list, machine.filename, photo)
+            result += photo.filename + " is " + label + " with a confidence of " + str(confidence) + '\n'
 
         return render_template('try_machine.html', filename=filename, result=result)
 
