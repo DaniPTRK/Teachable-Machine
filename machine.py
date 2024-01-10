@@ -12,22 +12,22 @@ def build_model(input, num_classes):
     # add layers to the model
     model.add(layers.Conv2D(32, (3, 3), activation="relu", input_shape = input, name = "layer1"))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.Conv2D(64, (3, 3), activation="relu"))
     model.add(layers.MaxPooling2D((2, 2)))
-    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.Conv2D(64, (3, 3), activation="relu"))
     
     # flatten the output
     model.add(layers.Flatten())
     
     # add dense layers to the model
-    model.add(layers.Dense(64, activation='relu'))
+    model.add(layers.Dense(64, activation="relu"))
 
     # output layer
-    model.add(layers.Dense(num_classes, activation='softmax'))
+    model.add(layers.Dense(num_classes, activation="softmax"))
     
     return model
 
-#define image & batch info
+# define image & batch info
 batch_size = 32
 img_height = 180
 img_width = 180
@@ -66,7 +66,8 @@ def preprocess(X_data, Y_data, num_classes):
     y_data = utils.to_categorical(all_labels, num_classes=num_classes)
     return x_data, y_data
 
-def train(target, uploaded_photos, machine_name, num_classes):
+# this is used for training a machine that's about to be uploaded
+def train(uploaded_photos, machine_name, num_classes):
     # convert FileStorage to image and then resize it to the preferred sizes
     actual_photos = [[] for _ in range(num_classes)]
     input_size = (img_height, img_width)
@@ -125,3 +126,8 @@ def train(target, uploaded_photos, machine_name, num_classes):
     model.save(model_filepath)
 
     return model_filepath
+
+# this is used for making predictions with an uploaded machine
+def predict(label, model_filepath, img):
+    image = Image.open(BytesIO(img.read())).convert("RGB")
+    image = image.resize(input_size)

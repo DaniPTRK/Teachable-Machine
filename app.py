@@ -5,7 +5,7 @@ from os import path
 from werkzeug.security import generate_password_hash, check_password_hash
 import uuid
 import os
-from machine import train
+from machine import train, predict
 
 # initfrom machine import train
 # importing essentials for training/testing a machine
@@ -168,7 +168,7 @@ def upload_photos():
                 return render_template('upload_photos.html', error="No valid image selected")
             
         # train the machine
-        path = train(target, uploaded_photos, machine_name, num_classes)
+        path = train(uploaded_photos, machine_name, num_classes)
 
         # save to database
         new_model = Machine(name=machine_name, filename=path, user_id=current_user.id)
@@ -320,15 +320,11 @@ def try_machine(filename):
         if len(uploaded_photos) > 5:
             return render_template('try_machine.html', error=f"Too many photos")
 
-        # waiting for code for tryig machine
-
-        # placeholder result for demonstration
-        label = ("pisica", "papagal", "papagal", "pisica")
+        # machine predictions
         result = ""
-        i = 0
-        for type in label:
-            result += uploaded_photos[i].filename + " is " + type + '\n'
-            i = i + 1
+        i, confidence = predict()
+        for photo in uploaded_photos:
+            result += photo.filename + " is " + type + predict() + '\n'
 
         return render_template('try_machine.html', filename=filename, result=result)
 
