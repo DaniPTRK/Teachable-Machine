@@ -1,3 +1,4 @@
+import os
 import random as rd
 import numpy as np
 from io import BytesIO
@@ -119,7 +120,8 @@ def train(target, uploaded_photos, machine_name, num_classes):
     model.fit(x_train, y_train, epochs = 10, batch_size = batch_size)
 
     # save model
-    model_export_path = f"{machine_name}_trained_model"
-    model.save("/machines/" + model_export_path)
+    model_file_name = "{machine_name}_trained_model"
+    model_filepath = os.path.join("machines", model_file_name)
+    model.save(model_filepath)
 
-    return model
+    return model_filepath
