@@ -38,6 +38,7 @@ class Machine(db.Model):
     name = db.Column(db.String(50), nullable=False)
     filename = db.Column(db.String(50), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    labels = db.Column(db.String(255), nullable=True)
 
 def create_database():
     if not path.exists("database.db"):
@@ -170,8 +171,17 @@ def upload_photos():
         # train the machine
         path = train(target, uploaded_photos, machine_name, num_classes)
 
+        # saving the labels
+        labels = ""
+        for t in target:
+            labels += t + ", "
+
+        # Remove the last ", " if the string is not empty
+        if labels:
+            labels = labels[:-2]
+
         # save to database
-        new_model = Machine(name=machine_name, filename=path, user_id=current_user.id)
+        new_model = Machine(name=machine_name, filename=path, user_id=current_user.id, labels=labels)
         db.session.add(new_model)
         db.session.commit()
         
@@ -225,6 +235,13 @@ def upload_machine():
 
             if existing_machine:
                 return render_template('upload_machine.html', error=f'Machine name already taken. Please choose a different name.')
+            
+            # check the labels
+            labels = request.form['labels']
+            labels_list = [word.strip() for word in labels.split(',')]
+
+            if len(labels_list) < 2:
+                return render_template('upload_machine.html', error=f'You need at least 2 labels.')
 
             # unique filename
             unique_filename = generate_unique_filename()
@@ -235,7 +252,7 @@ def upload_machine():
             uploaded_file.save(file_path)
 
             # save to database
-            new_model = Machine(name=machine_name, filename=unique_filename, user_id=current_user.id)
+            new_model = Machine(name=machine_name, filename=unique_filename, user_id=current_user.id, labels=labels)
             db.session.add(new_model)
             db.session.commit()
 
@@ -319,6 +336,14 @@ def try_machine(filename):
         
         if len(uploaded_photos) > 5:
             return render_template('try_machine.html', error=f"Too many photos")
+
+        # extracting machine
+        machine = Machine.query.filter_by(filename=filename).first()
+
+        if not machine:
+            return render_template('try_machine.html', error=f"Machine not found in the database")
+        
+        labels_list = [word.strip() for word in machine.labels.split(',')]
 
         # waiting for code for tryig machine
 
